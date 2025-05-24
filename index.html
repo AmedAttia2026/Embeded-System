@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical Embedded Systems Tutorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #F8F9FA; /* Page Background */
+            direction: rtl; /* Right-to-left for Arabic */
+            text-align: right;
+        }
+        .header-bg {
+            background-color: #007BFF; /* A new blue for this quiz */
+        }
+        .nav-button {
+            background-color: #66B2FF; /* Lighter Blue */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: #0056b3; /* Darker Blue */
+        }
+        .nav-button.active {
+            background-color: #FFC107; /* Amber Yellow */
+            color: #3A3A3A; /* Dark Gray */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .card {
+            background-color: #FFFFFF; /* Card Background */
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            direction: ltr; /* Left-to-right for card content */
+            text-align: left; /* Left-align text within card */
+        }
+        .question-text {
+            font-size: 1.125rem; /* lg */
+            font-weight: 600; /* semibold */
+            color: #3A3A3A; /* Dark Gray */
+            margin-bottom: 1rem;
+        }
+        .answer-button, .check-all-button {
+            background-color: #007BFF; /* Blue */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem;
+        }
+        .answer-button:hover, .check-all-button:hover {
+            background-color: #0056b3; /* Darker Blue */
+        }
+        .answer-text {
+            color: #28A745; /* Green for correct answer text */
+            font-weight: 700; /* bold */
+            margin-top: 0.75rem;
+            display: none; /* Hidden by default */
+        }
+        .mcq-option {
+            margin-bottom: 0.5rem;
+        }
+        .score-display {
+            margin-top: 1rem;
+            font-weight: 700;
+            color: #3A3A3A;
+            font-size: 1.5rem; /* Make score display larger */
+            text-align: center;
+        }
+        .final-score-message {
+            font-size: 2rem; /* Larger font for final score */
+            font-weight: 800; /* Extra bold */
+            color: #007BFF; /* Blue color */
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .correct-answer-highlight {
+            color: #28A745; /* Green */
+        }
+        .incorrect-answer-highlight {
+            color: #DC3545; /* Red */
+        }
+        .question-feedback {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        /* Specific styles for review page highlighting */
+        .review-correct-option {
+            color: #28A745; /* Green */
+            font-weight: bold;
+        }
+        .review-incorrect-option {
+            color: #DC3545; /* Red */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="header-bg text-white p-6 shadow-md">
+        <div class="container mx-auto text-center">
+            <h1 class="text-3xl md:text-4xl font-bold">Practical Embedded Systems Tutorial</h1>
+            <p class="mt-2 text-md">مسؤول التواصل: أحمد عطية</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <nav class="flex flex-wrap justify-center gap-4 mb-8">
+            <button id="main-quiz-tab" class="nav-button active">الأسئلة</button>
+            <button id="incorrect-answers-tab" class="nav-button">الإجابات الخاطئة</button>
+        </nav>
+
+        <section id="main-quiz-section" class="question-section">
+            <h2 class="text-2xl font-bold mb-6 text-gray-700">جميع الأسئلة</h2>
+            <p class="mb-6 text-gray-600">اختر الإجابة الصحيحة لكل سؤال. يمكنك الكشف عن الإجابة الفردية أو التحقق من نتيجتك الكلية.</p>
+            <div id="main-quiz-container"></div>
+            <button id="check-all-main-quiz" class="check-all-button">تحقق من جميع الإجابات</button>
+            <div id="main-quiz-score-display" class="score-display mt-4"></div>
+            <div id="final-score-message" class="final-score-message hidden"></div>
+            <button id="review-incorrect-button" class="nav-button mt-4 hidden">مراجعة الأخطاء</button> </section>
+
+        <section id="incorrect-answers-section" class="question-section hidden">
+            <h2 class="text-2xl font-bold mb-6 text-gray-700">مراجعة الإجابات الخاطئة</h2>
+            <p class="mb-6 text-gray-600">هنا يمكنك مراجعة جميع الأسئلة التي أجبت عليها بشكل خاطئ.</p>
+            <div id="incorrect-answers-container"></div>
+        </section>
+
+        <footer class="text-left mt-12 py-6 border-t border-gray-300" style="direction: ltr;">
+            <p class="text-gray-600">&copy; 2024 Practical Review Quiz. All rights reserved.</p>
+            <p class="text-sm text-gray-500">The provided data is for illustrative and educational purposes only.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        const quizData = [
+            {
+                type: 'mcq',
+                q: "Which register in AVR microcontrollers is used to configure a pin as input or output?",
+                options: ["PORTX", "PINX", "DDRx", "SPCR"],
+                correct: "DDRx"
+            },
+            {
+                type: 'mcq',
+                q: "To read the current logic level of an input pin on PORTD, which register should be used?",
+                options: ["PORTD", "DDRD", "PIND", "SPDR"],
+                correct: "PIND"
+            },
+            {
+                type: 'mcq',
+                q: "What is the function of the PORTx register when a pin is configured as output?",
+                options: ["It disables the pin", "It reads analog values", "It sets the output HIGH or LOW", "It configures the direction"],
+                correct: "It sets the output HIGH or LOW"
+            },
+            {
+                type: 'mcq',
+                q: "What will the following code do?\nDDRB $=0xFF$;\nPORTB $=0\\times00$;",
+                options: ["Configure all PORTB pins as inputs and set them LOW", "Configure all PORTB pins as outputs and set them LOW", "Configure all PORTB pins as outputs and set them HIGH", "Configure all PORTB pins as inputs and set them HIGH"],
+                correct: "Configure all PORTB pins as outputs and set them LOW"
+            },
+            {
+                type: 'mcq',
+                q: "What does the Timer/Counter register (e.g., TCNT0) do in AVR microcontrollers?",
+                options: ["Sets the baud rate for UART", "Holds the current count value of the timer", "Stores the ADC conversion result", "Enables or disables external interrupts"],
+                correct: "Holds the current count value of the timer"
+            },
+            {
+                type: 'mcq',
+                q: "In CTC mode, what happens when the timer value matches the OCR (Output Compare Register) value?",
+                options: ["Timer stops", "Timer resets to 0", "Timer overflows", "Interrupt is disabled"],
+                correct: "Timer resets to 0"
+            },
+            {
+                type: 'mcq',
+                q: "What is the primary advantage of using interrupts in a microcontroller-based system?",
+                options: ["Reduces the need for memory", "Increases power consumption", "Allows the CPU to respond immediately to external events", "Makes the program run slower"],
+                correct: "Allows the CPU to respond immediately to external events"
+            },
+            {
+                type: 'mcq',
+                q: "What happens when an interrupt occurs in an AVR microcontroller?",
+                options: ["The microcontroller shuts down", "The current program is permanently stopped", "The microcontroller jumps to a special routine to handle the event", "Nothing happens unless a timer is running"],
+                correct: "The microcontroller jumps to a special routine to handle the event"
+            },
+            {
+                type: 'mcq',
+                q: "What is the name of the function that automatically executes when a specific interrupt occurs?",
+                options: ["Main routine", "Watchdog", "Interrupt Service Routine (ISR)", "Polling function"],
+                correct: "Interrupt Service Routine (ISR)"
+            },
+            {
+                type: 'mcq',
+                q: "What is the primary function of an ADC in AVR microcontrollers?",
+                options: ["Convert digital data to analog", "Convert analog signals to digital values", "Send data over serial", "Control voltage levels"],
+                correct: "Convert analog signals to digital values"
+            },
+            {
+                type: 'mcq',
+                q: "What is the default reference voltage used for ADC in Arduino/AVR?",
+                options: ["12V", "3.3V", "5V", "9V"],
+                correct: "5V"
+            },
+            {
+                type: 'mcq',
+                q: "Which Arduino function is used to read analog input?",
+                options: ["digitalRead()", "analogRead()", "readADC()", "adcStart()"],
+                correct: "analogRead()"
+            },
+            {
+                type: 'mcq',
+                q: "What Arduino function is used to turn an LED ON or OFF?",
+                options: ["analogWrite()", "digitalRead()", "pinMode()", "digitalWrite()"],
+                correct: "digitalWrite()"
+            },
+            {
+                type: 'mcq',
+                q: "What does the following code do?\ndigitalWrite(13, HIGH);\ndelay(1000);\ndigitalWrite(13, LOW);",
+                options: ["Turns off the LED", "Turns on the LED continuously", "Blinks the LED for 1 second", "Dims the LED"],
+                correct: "Blinks the LED for 1 second"
+            },
+            {
+                type: 'mcq',
+                q: "Before controlling an LED pin, you should configure it as:",
+                options: ["Input", "Analog", "Output", "Interrupt"],
+                correct: "Output"
+            },
+            {
+                type: 'mcq',
+                q: "Why is a motor driver (like L298N) used with a microcontroller?",
+                options: ["To change signal types", "To reduce power", "To allow the microcontroller to handle high current safely", "To read analog signals"],
+                correct: "To allow the microcontroller to handle high current safely"
+            },
+            {
+                type: 'mcq',
+                q: "What is the function of PWM in motor control?",
+                options: ["Turning motor ON/OFF only", "Controlling motor speed", "Changing motor type", "Reversing direction"],
+                correct: "Controlling motor speed"
+            },
+            {
+                type: 'mcq',
+                q: "What does a typical DC motor need for direction control?",
+                options: ["One signal wire", "An analog input", "Two digital pins (IN1 and IN2)", "Only ground"],
+                correct: "Two digital pins (IN1 and IN2)"
+            },
+            {
+                type: 'mcq',
+                q: "What does '16x2 LCD' mean?",
+                options: ["16 pixels by 2 pixels", "16 characters per row, 2 rows", "16 lines and 2 columns", "16-bit data and 2-line display"],
+                correct: "16 characters per row, 2 rows"
+            },
+            {
+                type: 'mcq',
+                q: "Which library is commonly used to control a text LCD in Arduino?",
+                options: ["Wire.h", "LiquidCrystal.h", "Servo.h", "LCDtext.h"],
+                correct: "LiquidCrystal.h"
+            },
+            {
+                type: 'mcq',
+                q: "What is the first step to display text on an LCD in Arduino?",
+                options: ["Use lcd.print()", "Declare pins and initialize LCD with lcd.begin()", "Call analogWrite()", "Enable backlight"],
+                correct: "Declare pins and initialize LCD with lcd.begin()"
+            },
+            {
+                type: 'mcq',
+                q: "What is one advantage of using an OLED display over a standard LCD?",
+                options: ["Consumes more power", "Requires backlight", "Sharper, high-contrast graphics", "Only works in bright light"],
+                correct: "Sharper, high-contrast graphics"
+            },
+            {
+                type: 'mcq',
+                q: "What kind of information can be displayed on an OLED?",
+                options: ["Only numbers", "Only sensor data", "Text and graphics", "Only voltage readings"],
+                correct: "Text and graphics"
+            },
+            {
+                type: 'mcq',
+                q: "What is the role of pinMode() in Arduino C when programming AVR microcontrollers?",
+                options: ["It sets the voltage level", "It sets a pin as input or output", "It disables interrupts", "It reads analog values"],
+                correct: "It sets a pin as input or output"
+            },
+            {
+                type: 'mcq',
+                q: "Which tool is commonly used to write and debug code for AVR microcontrollers?",
+                options: ["Photoshop", "Arduino IDE or Atmel Studio", "MS Word", "MATLAB"],
+                correct: "Arduino IDE or Atmel Studio"
+            }
+        ];
+
+        // Global array to store incorrect answers for review
+        let incorrectAnswersLog = [];
+
+        const sections = {
+            'main-quiz': {
+                data: quizData,
+                containerId: 'main-quiz-container',
+                scoreDisplayId: 'main-quiz-score-display',
+                checkAllButtonId: 'check-all-main-quiz',
+                render: renderQuizSection
+            },
+            'incorrect-answers': {
+                containerId: 'incorrect-answers-container',
+                render: renderIncorrectAnswers
+            }
+        };
+
+        let activeSection = 'main-quiz'; // Default active section
+
+        // Function to show/hide sections based on ID
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.question-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            // Show the selected section
+            document.getElementById(`${sectionId}-section`).classList.remove('hidden');
+
+            // Deactivate all nav buttons
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            // Activate the current nav button
+            document.getElementById(`${sectionId}-tab`).classList.add('active');
+            activeSection = sectionId;
+            sections[activeSection].render(); // Render content for the active section
+        }
+
+        // Function to render a quiz section
+        function renderQuizSection() {
+            const section = sections[activeSection];
+            const container = document.getElementById(section.containerId);
+            container.innerHTML = ''; // Clear previous content
+
+            const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F']; // Labels for options
+
+            section.data.forEach((item, index) => {
+                const questionCard = document.createElement('div');
+                questionCard.className = 'card';
+                questionCard.id = `${activeSection}-card-${index}`; // Unique ID for each question card
+
+                if (item.type === 'mcq') {
+                    let optionsHtml = '';
+                    item.options.forEach((option, optIndex) => {
+                        const label = optionLabels[optIndex] || ''; // Get label (A, B, C, D...)
+                        optionsHtml += `
+                            <div class="mcq-option">
+                                <input type="radio" id="${activeSection}-mcq-${index}-opt-${optIndex}" name="${activeSection}-mcq-${index}" value="${option}" class="ml-2">
+                                <label for="${activeSection}-mcq-${index}-opt-${optIndex}">${label}. ${option}</label>
+                            </div>
+                        `;
+                    });
+                    questionCard.innerHTML = `
+                        <p class="question-text">${index + 1}- ${item.q}</p>
+                        <div class="mb-4">${optionsHtml}</div>
+                        <button class="answer-button" data-index="${index}" onclick="showAnswer('${activeSection}', ${index})">عرض الإجابة</button>
+                        <p class="answer-text" id="${activeSection}-correct-answer-${index}"></p>
+                        <div class="question-feedback" id="${activeSection}-feedback-${index}"></div>
+                    `;
+                }
+                container.appendChild(questionCard);
+            });
+
+            // Attach event listener to the "Check All" button for the current section
+            document.getElementById(section.checkAllButtonId).onclick = () => checkAllAnswers(activeSection);
+            // Clear previous score display when rendering a new section
+            document.getElementById(section.scoreDisplayId).textContent = '';
+            document.getElementById('final-score-message').classList.add('hidden'); // Hide final score message on re-render
+            document.getElementById('review-incorrect-button').classList.add('hidden'); // Hide review button on re-render
+        }
+
+        // Function to show individual answer (for "عرض الإجابة" button)
+        function showAnswer(sectionId, index) {
+            const sectionData = sections[sectionId].data;
+            const item = sectionData[index];
+            const answerDisplay = document.getElementById(`${sectionId}-correct-answer-${index}`);
+            const feedbackDisplay = document.getElementById(`${sectionId}-feedback-${index}`);
+            
+            answerDisplay.style.display = 'block';
+            feedbackDisplay.textContent = ''; // Clear feedback when showing individual answer
+            feedbackDisplay.classList.remove('correct-answer-highlight', 'incorrect-answer-highlight'); // Reset feedback styling
+
+            let selectedValue;
+            if (item.type === 'mcq') {
+                const selectedOption = document.querySelector(`input[name="${sectionId}-mcq-${index}"]:checked`);
+                selectedValue = selectedOption ? selectedOption.value : null;
+                answerDisplay.textContent = `الإجابة الصحيحة: ${item.correct}`;
+            }
+
+            if (selectedValue !== null) {
+                let isCorrect = (selectedValue === item.correct);
+
+                if (isCorrect) {
+                    answerDisplay.textContent += ' 🎉'; // Add celebration if user's selection is correct
+                    answerDisplay.classList.remove('incorrect-answer-highlight');
+                    answerDisplay.classList.add('correct-answer-highlight');
+                } else {
+                    answerDisplay.classList.remove('correct-answer-highlight');
+                    answerDisplay.classList.add('incorrect-answer-highlight'); // Make it red if incorrect
+                }
+            } else {
+                // If no option selected, just show the answer in default blue (or reset to default)
+                answerDisplay.classList.remove('correct-answer-highlight', 'incorrect-answer-highlight');
+                answerDisplay.style.color = '#4ECDC4'; // Revert to default blue if no selection
+            }
+        }
+
+        // Function to check all answers in a section
+        function checkAllAnswers(sectionId) {
+            let score = 0;
+            const sectionData = sections[sectionId].data;
+            const totalQuestions = sectionData.length;
+            const finalScoreMessageElement = document.getElementById('final-score-message');
+            const reviewButton = document.getElementById('review-incorrect-button');
+
+            // Clear previous incorrect answers for this specific tutorial before re-checking
+            incorrectAnswersLog = incorrectAnswersLog.filter(log => log.tutorialId !== sectionId);
+
+            sectionData.forEach((item, index) => {
+                const feedbackDisplay = document.getElementById(`${sectionId}-feedback-${index}`);
+                const answerDisplay = document.getElementById(`${sectionId}-correct-answer-${index}`);
+                
+                feedbackDisplay.textContent = ''; // Clear previous feedback
+                feedbackDisplay.className = 'question-feedback'; // Reset class
+
+                // Reset answer display styling and hide it initially for fresh check
+                answerDisplay.classList.remove('correct-answer-highlight', 'incorrect-answer-highlight');
+                answerDisplay.style.display = 'none'; 
+
+                let selectedValue = null;
+                let isCorrect = false;
+                let userAnswerText = 'لم يتم الإجابة'; // Default for no selection
+
+                if (item.type === 'mcq') {
+                    const selectedOption = document.querySelector(`input[name="${sectionId}-mcq-${index}"]:checked`);
+                    selectedValue = selectedOption ? selectedOption.value : null;
+                    isCorrect = (selectedValue === item.correct);
+                    userAnswerText = selectedValue || userAnswerText;
+                }
+
+                if (selectedValue === null) {
+                    feedbackDisplay.textContent = 'الرجاء اختيار إجابة لهذا السؤال.';
+                    feedbackDisplay.classList.add('incorrect-answer-highlight');
+                    
+                    // Show correct answer in red if user didn't select anything
+                    answerDisplay.textContent = `الإجابة الصحيحة: ${item.correct}`;
+                    answerDisplay.style.display = 'block';
+                    answerDisplay.classList.add('incorrect-answer-highlight');
+
+                    // Log incorrect answer
+                    incorrectAnswersLog.push({
+                        tutorialId: sectionId, // This will be 'main-quiz'
+                        questionNumber: index + 1,
+                        questionText: item.q,
+                        correctAnswer: item.correct,
+                        userAnswer: userAnswerText // Log 'لم يتم الإجابة'
+                    });
+                } else if (isCorrect) {
+                    score++;
+                    feedbackDisplay.textContent = 'إجابة صحيحة! 🎉';
+                    feedbackDisplay.classList.add('correct-answer-highlight');
+                } else {
+                    feedbackDisplay.textContent = `إجابة خاطئة. الإجابة الصحيحة هي: ${item.correct}`;
+                    feedbackDisplay.classList.add('incorrect-answer-highlight');
+                    
+                    // Show correct answer in red
+                    answerDisplay.textContent = `الإجابة الصحيحة: ${item.correct}`;
+                    answerDisplay.style.display = 'block';
+                    answerDisplay.classList.add('incorrect-answer-highlight');
+
+                    // Log incorrect answer
+                    incorrectAnswersLog.push({
+                        tutorialId: sectionId, // This will be 'main-quiz'
+                        questionNumber: index + 1,
+                        questionText: item.q,
+                        correctAnswer: item.correct,
+                        userAnswer: userAnswerText
+                    });
+                }
+            });
+
+            const scoreDisplayElement = document.getElementById(sections[sectionId].scoreDisplayId);
+            scoreDisplayElement.textContent = `لقد حصلت على ${score} من ${totalQuestions} إجابات صحيحة.`;
+            scoreDisplayElement.classList.add('correct-answer-highlight');
+
+            // Display final score message prominently
+            finalScoreMessageElement.textContent = `نتيجتك النهائية: ${score} من ${totalQuestions}`;
+            finalScoreMessageElement.classList.remove('hidden');
+
+            // Show the review incorrect answers button
+            reviewButton.classList.remove('hidden');
+        }
+
+        // Function to render the incorrect answers section
+        function renderIncorrectAnswers() {
+            const container = document.getElementById('incorrect-answers-container');
+            container.innerHTML = ''; // Clear previous content
+
+            if (incorrectAnswersLog.length === 0) {
+                container.innerHTML = `<p class="text-xl text-gray-600 text-center mt-8">لا توجد إجابات خاطئة لمراجعتها حتى الآن. حاول الإجابة على بعض الأسئلة أولاً!</p>`;
+                return;
+            }
+
+            const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F']; // Labels for options
+
+            // Grouping is not strictly necessary for a single section, but kept for consistency
+            const groupedIncorrectAnswers = incorrectAnswersLog.reduce((acc, current) => {
+                if (!acc[current.tutorialId]) { // tutorialId will be 'main-quiz'
+                    acc[current.tutorialId] = [];
+                }
+                acc[current.tutorialId].push(current);
+                return acc;
+            }, {});
+
+            for (const tutorialId in groupedIncorrectAnswers) {
+                const sectionHeader = document.createElement('h3');
+                sectionHeader.className = 'text-xl font-bold mb-4 mt-8 text-gray-700';
+                sectionHeader.textContent = `الأخطاء في قسم الأسئلة الرئيسية`; // Custom title for the single section
+                container.appendChild(sectionHeader);
+
+                groupedIncorrectAnswers[tutorialId].forEach(loggedError => {
+                    // Find the original question data
+                    const originalQuestionIndex = loggedError.questionNumber - 1; // Adjust for 0-indexed array
+                    const item = quizData[originalQuestionIndex]; // Assuming quizData is accessible globally
+
+                    if (!item) { // Fallback if question not found (shouldn't happen)
+                        const errorCard = document.createElement('div');
+                        errorCard.className = 'card border border-red-300 bg-red-50';
+                        errorCard.innerHTML = `<p class="question-text">خطأ: لم يتم العثور على السؤال رقم ${loggedError.questionNumber}.</p>`;
+                        container.appendChild(errorCard);
+                        return;
+                    }
+
+                    const questionCard = document.createElement('div');
+                    // Use a specific class for review cards to style them (e.g., light red border)
+                    questionCard.className = 'card border border-red-300 bg-red-50'; 
+                    questionCard.id = `review-card-${loggedError.questionNumber}`; // Unique ID for review card
+
+                    let optionsHtml = '';
+                    item.options.forEach((option, optIndex) => {
+                        const label = optionLabels[optIndex] || '';
+                        const isUserAnswer = (option === loggedError.userAnswer);
+                        const isCorrectAnswer = (option === item.correct);
+
+                        let optionClass = '';
+                        if (isUserAnswer && !isCorrectAnswer) { // User chose this, and it was wrong
+                            optionClass = 'review-incorrect-option'; // Apply red class
+                        } else if (isCorrectAnswer) { // This is the correct answer
+                            optionClass = 'review-correct-option'; // Apply green class
+                        }
+
+                        optionsHtml += `
+                            <div class="mcq-option ${optionClass}">
+                                <input type="radio" id="review-${loggedError.questionNumber}-opt-${optIndex}" 
+                                       name="review-${loggedError.questionNumber}" value="${option}" 
+                                       class="ml-2" disabled ${isUserAnswer ? 'checked' : ''}>
+                                <label for="review-${loggedError.questionNumber}-opt-${optIndex}">${label}. ${option}</label>
+                            </div>
+                        `;
+                    });
+
+                    questionCard.innerHTML = `
+                        <p class="question-text">السؤال ${loggedError.questionNumber}: ${item.q}</p>
+                        <div class="mb-4">${optionsHtml}</div>
+                        <p class="text-red-700 font-semibold">إجابتك: ${loggedError.userAnswer}</p>
+                        <p class="text-green-700 font-semibold">الإجابة الصحيحة: ${loggedError.correctAnswer}</p>
+                    `;
+                    container.appendChild(questionCard);
+                });
+            }
+        }
+
+        // Event listeners for navigation tabs
+        document.getElementById('main-quiz-tab').addEventListener('click', () => showSection('main-quiz'));
+        document.getElementById('incorrect-answers-tab').addEventListener('click', () => showSection('incorrect-answers'));
+        document.getElementById('review-incorrect-button').addEventListener('click', () => showSection('incorrect-answers'));
+
+
+        // Initial rendering of the main quiz section when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('main-quiz'); 
+        });
+    </script>
+</body>
+</html>
